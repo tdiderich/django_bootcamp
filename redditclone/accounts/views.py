@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 
 
 def signup(request):
@@ -12,7 +12,7 @@ def signup(request):
             except User.DoesNotExist:
                 user = User.objects.create_user(request.POST['username'], password=request.POST['password1'])
                 login(request, user)
-                return render(request, 'accounts/signup.html')
+                return redirect('home')
         else:
             return render(request, 'accounts/signup.html', {'error':'Hey happy fingers, those passwords didn\'t match...'})
     else:
@@ -23,8 +23,16 @@ def loginview(request):
         user = authenticate(username=request.POST['username'], password=request.POST['password'])
         if user is not None:
             login(request, user)
-            return render(request, 'accounts/login.html', {'error':'access granted young skywalker'})
+            if 'next' is request.POST:
+                return redirect(request.POST['next'])
+            else:
+                return redirect('home')
         else:
             return render(request, 'accounts/login.html', {'error':'Hey happy fingers, username and password didn\'t match...'})
     else:
         return render(request, 'accounts/login.html')
+
+def logoutview(request):
+    if request.method == 'POST':
+        logout(request)
+        return redirect('home')
